@@ -1,4 +1,4 @@
-namespace cslox
+namespace CsLox
 {
     enum TokenType
     {

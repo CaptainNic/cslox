@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace cslox
+namespace CsLox
 {
     class Lexer
     {

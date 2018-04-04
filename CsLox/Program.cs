@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace cslox
+namespace CsLox
 {
     class Lox
     {
