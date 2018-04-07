@@ -48,6 +48,7 @@ namespace CsLox
                 ScanToken();
             }
 
+            AddToken(TokenType.EOF);
             return _tokens;
         }
 

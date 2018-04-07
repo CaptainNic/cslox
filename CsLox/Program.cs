@@ -84,25 +84,31 @@ namespace CsLox
                 }
             }
 
+            Parser parser = new Parser(tokens);
+            Expr expression = parser.Parse();
+
             if (_dbgAst)
             {
-                var astPrinter = new AstPrinter();
-                Expr expr = new BinaryExpr(
-                    new UnaryExpr(
-                        new Token(TokenType.MINUS, "-", null, 1),
-                        new LiteralExpr(123)),
-                    new Token(TokenType.STAR, "*", null, 1),
-                    new GroupingExpr(
-                        new LiteralExpr(45.67)
-                    )        
-                );
-                Console.WriteLine(astPrinter.Print(expr));
+                AstPrinter astPrinter = new AstPrinter();
+                Console.WriteLine(astPrinter.Print(expression));
             }
         }
 
         public static void Error(int line, string message)
         {
             Report(line, "", message);
+        }
+
+        public static void Error(Token token, string message)
+        {
+            if (token.Type == TokenType.EOF)
+            {
+                Report(token.Line, " at end", message);
+            }
+            else
+            {
+                Report(token.Line, $" at '{token.Lexeme}'", message);
+            }
         }
 
         private static void Report(int line, string where, string message)
