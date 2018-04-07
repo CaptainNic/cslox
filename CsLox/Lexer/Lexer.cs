@@ -4,7 +4,7 @@ namespace CsLox
 {
     class Lexer
     {
-        private static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>
+        private static readonly Dictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
         {
             { "and", TokenType.AND },
             { "class", TokenType.CLASS },
@@ -174,7 +174,7 @@ namespace CsLox
             }
 
             var text = _source.Substring(_start, _current - _start);
-            if (!keywords.TryGetValue(text, out TokenType type))
+            if (!_keywords.TryGetValue(text, out TokenType type))
             {
                 type = TokenType.IDENTIFIER;
             }

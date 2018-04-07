@@ -2,24 +2,24 @@ namespace CsLox
 {
     public class Token
     {
-        public readonly TokenType type;
-        public readonly string lexeme;
-        public readonly object literal;
-        public readonly int line;
+        public readonly TokenType Type;
+        public readonly string Lexeme;
+        public readonly object Literal;
+        public readonly int Line;
 
         public Token(TokenType type, string lexeme, object literal, int line)
         {
-            this.type = type;
-            this.lexeme = lexeme;
-            this.literal = literal;
-            this.line = line;
+            Type = type;
+            Lexeme = lexeme;
+            Literal = literal;
+            Line = line;
         }
 
         public override string ToString()
         {
-            return (literal == null)
-                ? $"[{type}] {lexeme}"
-                : $"[{type}] {lexeme} | {literal}";
+            return (Literal == null)
+                ? $"[{Type}] {Lexeme}"
+                : $"[{Type}] {Lexeme} | {Literal}";
         }
     }
 }

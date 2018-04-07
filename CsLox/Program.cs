@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace CsLox
@@ -6,10 +7,16 @@ namespace CsLox
     class Lox
     {
         private static bool _hadError = false;
+        private static string _scriptPath = "";
+
+        // Debug Options
+        private static bool _dbgLexer = false;
+        private static bool _dbgAst = false;
 
         static void Main(string[] args)
         {
-            if (args.Length == 0)
+            ParseOptions(args);
+            if (string.IsNullOrWhiteSpace(_scriptPath))
             {
                 RunPrompt();
             }
@@ -23,6 +30,26 @@ namespace CsLox
                 Environment.Exit(-1);
             }
         }
+
+        private static void ParseOptions(string[] args)
+        {
+            List<string> opts = new List<string>(args);
+
+            void PerformIfOptFound(string opt, Action<int> setter)
+            {
+                var index = opts.FindIndex((str) => str.Equals(opt));
+                if (index >= 0)
+                {
+                    setter(index);
+                }
+            }
+
+            PerformIfOptFound("--dbg-lexer", (idx) => _dbgLexer = true);
+            PerformIfOptFound(  "--dbg-ast", (idx) => _dbgAst = true);
+            PerformIfOptFound(   "--script", (idx) => _scriptPath = opts[idx]);
+        }
+
+
 
         private static void RunScript(string scriptPath)
         {
@@ -49,9 +76,27 @@ namespace CsLox
             Lexer lexer = new Lexer(code);
             var tokens = lexer.ScanTokens();
 
-            foreach (var token in tokens)
+            if (_dbgLexer)
             {
-                Console.WriteLine(token);
+                foreach (var token in tokens)
+                {
+                    Console.WriteLine(token);
+                }
+            }
+
+            if (_dbgAst)
+            {
+                var astPrinter = new AstPrinter();
+                Expr expr = new BinaryExpr(
+                    new UnaryExpr(
+                        new Token(TokenType.MINUS, "-", null, 1),
+                        new LiteralExpr(123)),
+                    new Token(TokenType.STAR, "*", null, 1),
+                    new GroupingExpr(
+                        new LiteralExpr(45.67)
+                    )        
+                );
+                Console.WriteLine(astPrinter.Print(expr));
             }
         }
 

@@ -53,12 +53,12 @@ foreach (var classDesc in classDescriptors)
 	foreach (FieldDescriptor field in classDesc.Fields)
 	{
 #>
-		readonly <#=field.Type#> <#=field.Name#>;
+		public readonly <#=field.Type#> <#=field.Name#>;
 <#
 	}
 #>
 
-		<#=classDesc.Name#>(<#=classDesc.ParameterString()#>)
+		public <#=classDesc.Name#>(<#=classDesc.ParameterString()#>)
 		{
 <#
 	foreach (FieldDescriptor field in classDesc.Fields)
