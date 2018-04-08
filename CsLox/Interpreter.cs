@@ -20,13 +20,13 @@ namespace CsLox
         }
     }
 
-    public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object>
+    public class Interpreter : AstNode.IVisitor<object>
     {
         public Interpreter()
         {
         }
 
-        public void Interpret(List<Stmt> statements)
+        public void Interpret(List<AstNode> statements)
         {
             try
             {
@@ -41,12 +41,12 @@ namespace CsLox
             }
         }
 
-        private void Execute(Stmt stmt)
+        private void Execute(AstNode stmt)
         {
             stmt.Accept(this);
         }
 
-        private object Evaluate(Expr expr)
+        private object Evaluate(AstNode expr)
         {
             return expr.Accept(this);
         }

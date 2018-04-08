@@ -23,9 +23,9 @@ namespace CsLox
             _tokens = tokens;
         }
 
-        public List<Stmt> Parse()
+        public List<AstNode> Parse()
         {
-            var statements = new List<Stmt>();
+            var statements = new List<AstNode>();
             try
             {
                 while (!IsAtEnd())
@@ -40,7 +40,7 @@ namespace CsLox
             }
         }
 
-        private Stmt Statement()
+        private AstNode Statement()
         {
             if (Match(TokenType.PRINT))
             {
@@ -50,37 +50,37 @@ namespace CsLox
             return ExpressionStatement();
         }
 
-        private Stmt PrintStatement()
+        private AstNode PrintStatement()
         {
-            Expr value = Expression();
+            AstNode value = Expression();
             Consume(TokenType.SEMICOLON, "Expect ';' after value.");
 
             return new PrintStmt(value);
         }
 
-        private Stmt ExpressionStatement()
+        private AstNode ExpressionStatement()
         {
-            Expr expr = Expression();
+            AstNode expr = Expression();
             Consume(TokenType.SEMICOLON, "Expect ';' ater expression.");
 
             return new ExpressionStmt(expr);
         }
 
         // Expression -> Equality
-        private Expr Expression()
+        private AstNode Expression()
         {
             return Equality();
         }
 
         // Equality -> Comparison ( ( != | == ) Comparison )*
-        private Expr Equality()
+        private AstNode Equality()
         {
-            Expr expr = Comparison();
+            AstNode expr = Comparison();
 
             while (Match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL))
             {
                 Token oper = Previous();
-                Expr right = Comparison();
+                AstNode right = Comparison();
                 expr = new BinaryExpr(expr, oper, right);
             }
 
@@ -88,14 +88,14 @@ namespace CsLox
         }
 
         // Comparison -> Addition ( ( < | <= | >= | > ) Addition )*
-        private Expr Comparison()
+        private AstNode Comparison()
         {
-            Expr expr = Addition();
+            AstNode expr = Addition();
 
             while (Match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL))
             {
                 Token oper = Previous();
-                Expr right = Addition();
+                AstNode right = Addition();
                 expr = new BinaryExpr(expr, oper, right);
             }
 
@@ -103,14 +103,14 @@ namespace CsLox
         }
 
         // Addition -> Multiplication ( ( + | - ) Multiplication )*
-        private Expr Addition()
+        private AstNode Addition()
         {
-            Expr expr = Multiplication();
+            AstNode expr = Multiplication();
 
             while (Match(TokenType.MINUS, TokenType.PLUS))
             {
                 Token oper = Previous();
-                Expr right = Multiplication();
+                AstNode right = Multiplication();
                 expr = new BinaryExpr(expr, oper, right);
             }
 
@@ -118,14 +118,14 @@ namespace CsLox
         }
 
         // Multiplication -> Unary ( ( / | * ) Unary )*
-        private Expr Multiplication()
+        private AstNode Multiplication()
         {
-            Expr expr = Unary();
+            AstNode expr = Unary();
 
             while (Match(TokenType.SLASH, TokenType.STAR))
             {
                 Token oper = Previous();
-                Expr right = Unary();
+                AstNode right = Unary();
                 expr = new BinaryExpr(expr, oper, right);
             }
 
@@ -134,12 +134,12 @@ namespace CsLox
 
         // Unary -> ( ! | - ) Unary
         //        | Primary
-        private Expr Unary()
+        private AstNode Unary()
         {
             if (Match(TokenType.BANG, TokenType.MINUS))
             {
                 Token oper = Previous();
-                Expr right = Unary();
+                AstNode right = Unary();
                 return new UnaryExpr(oper, right);
             }
 
@@ -149,7 +149,7 @@ namespace CsLox
         // Primary -> NUMBER | STRING
         //          | "false" | "true" | "nil"
         //          | "(" Expression ")"
-        private Expr Primary()
+        private AstNode Primary()
         {
             if (Match(TokenType.NUMBER, TokenType.STRING))
             {
@@ -169,7 +169,7 @@ namespace CsLox
             }
             if (Match(TokenType.LEFT_PAREN))
             {
-                Expr expr = Expression();
+                AstNode expr = Expression();
                 Consume(TokenType.RIGHT_PAREN, "Expected ')' after expression.");
                 return new GroupingExpr(expr);
             }

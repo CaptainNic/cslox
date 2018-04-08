@@ -1,12 +1,23 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace CsLox
 {
-    public class AstPrinter : Expr.IVisitor<string>
+    public class AstPrinter : AstNode.IVisitor<string>
     {
-        public string Print(Expr expr)
+        public string Print(AstNode node)
         {
-            return expr.Accept(this);
+            return node.Accept(this);
+        }
+
+        public string VisitExpressionStmt(ExpressionStmt stmt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitPrintStmt(PrintStmt stmt)
+        {
+            throw new NotImplementedException();
         }
 
         public string VisitBinaryExpr(BinaryExpr expr)
@@ -29,7 +40,7 @@ namespace CsLox
             return Parenthesize(expr.Oper.Lexeme, expr.Right);
         }
 
-        private string Parenthesize(string name, params Expr[] exprs)
+        private string Parenthesize(string name, params AstNode[] exprs)
         {
             var sb = new StringBuilder();
 
