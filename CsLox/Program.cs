@@ -25,7 +25,7 @@ namespace CsLox
             }
             else 
             {
-                RunScript(args[0]);
+                RunScript(_scriptPath);
             }
 
             if (_hadError)
@@ -53,7 +53,7 @@ namespace CsLox
 
             PerformIfOptFound("--dbg-lexer", (idx) => _dbgLexer = true);
             PerformIfOptFound(  "--dbg-ast", (idx) => _dbgAst = true);
-            PerformIfOptFound(   "--script", (idx) => _scriptPath = opts[idx]);
+            PerformIfOptFound(   "--script", (idx) => _scriptPath = opts[idx + 1]);
         }
 
 
@@ -92,15 +92,16 @@ namespace CsLox
             }
 
             Parser parser = new Parser(tokens);
-            Expr expression = parser.Parse();
+            var statements = parser.Parse();
 
             if (_dbgAst)
             {
                 AstPrinter astPrinter = new AstPrinter();
-                Console.WriteLine(astPrinter.Print(expression));
+                // TODO: Update
+                //Console.WriteLine(astPrinter.Print(expression));
             }
 
-            _interpreter.Interpret(expression);
+            _interpreter.Interpret(statements);
         }
 
         public static void Error(int line, string message)

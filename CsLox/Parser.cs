@@ -23,16 +23,47 @@ namespace CsLox
             _tokens = tokens;
         }
 
-        public Expr Parse()
+        public List<Stmt> Parse()
         {
+            var statements = new List<Stmt>();
             try
             {
-                return Expression();
+                while (!IsAtEnd())
+                {
+                    statements.Add(Statement());
+                }
+                return statements;
             }
             catch (ParseException)
             {
                 return null;
             }
+        }
+
+        private Stmt Statement()
+        {
+            if (Match(TokenType.PRINT))
+            {
+                return PrintStatement();
+            }
+
+            return ExpressionStatement();
+        }
+
+        private Stmt PrintStatement()
+        {
+            Expr value = Expression();
+            Consume(TokenType.SEMICOLON, "Expect ';' after value.");
+
+            return new PrintStmt(value);
+        }
+
+        private Stmt ExpressionStatement()
+        {
+            Expr expr = Expression();
+            Consume(TokenType.SEMICOLON, "Expect ';' ater expression.");
+
+            return new ExpressionStmt(expr);
         }
 
         // Expression -> Equality

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace CsLox
 {
@@ -19,18 +20,20 @@ namespace CsLox
         }
     }
 
-    public class Interpreter : Expr.IVisitor<object>
+    public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object>
     {
         public Interpreter()
         {
         }
 
-        public void Interpret(Expr expr)
+        public void Interpret(List<Stmt> statements)
         {
             try
             {
-                var value = Evaluate(expr);
-                Console.WriteLine(value);
+                foreach (var stmt in statements)
+                {
+                    Execute(stmt);
+                }
             }
             catch (LoxRuntimeException ex)
             {
@@ -38,9 +41,26 @@ namespace CsLox
             }
         }
 
+        private void Execute(Stmt stmt)
+        {
+            stmt.Accept(this);
+        }
+
         private object Evaluate(Expr expr)
         {
             return expr.Accept(this);
+        }
+
+        public object VisitExpressionStmt(ExpressionStmt stmt)
+        {
+            Evaluate(stmt.Expression);
+            return null;
+        }
+
+        public object VisitPrintStmt(PrintStmt stmt)
+        {
+            Console.WriteLine(Evaluate(stmt.Expression));
+            return null;
         }
 
         public object VisitBinaryExpr(BinaryExpr expr)

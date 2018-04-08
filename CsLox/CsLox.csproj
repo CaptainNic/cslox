@@ -10,6 +10,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CodeGen.cs</LastGenOutput>
     </None>
+    <None Update="Tests\printTest.lox">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
