@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="Expr.tt">
+    <None Update="CodeGen.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Expr.cs</LastGenOutput>
+      <LastGenOutput>CodeGen.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Expr.cs">
+    <Compile Update="CodeGen.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Expr.tt</DependentUpon>
+      <DependentUpon>CodeGen.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
