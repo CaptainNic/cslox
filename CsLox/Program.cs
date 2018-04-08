@@ -7,11 +7,14 @@ namespace CsLox
     class Lox
     {
         private static bool _hadError = false;
+        private static bool _hadRuntimeError = false;
         private static string _scriptPath = "";
 
         // Debug Options
         private static bool _dbgLexer = false;
         private static bool _dbgAst = false;
+
+        private static Interpreter _interpreter = new Interpreter();
 
         static void Main(string[] args)
         {
@@ -27,7 +30,11 @@ namespace CsLox
 
             if (_hadError)
             {
-                Environment.Exit(-1);
+                Environment.Exit(65);
+            }
+            if (_hadRuntimeError)
+            {
+                Environment.Exit(70);
             }
         }
 
@@ -92,6 +99,8 @@ namespace CsLox
                 AstPrinter astPrinter = new AstPrinter();
                 Console.WriteLine(astPrinter.Print(expression));
             }
+
+            _interpreter.Interpret(expression);
         }
 
         public static void Error(int line, string message)
@@ -109,6 +118,12 @@ namespace CsLox
             {
                 Report(token.Line, $" at '{token.Lexeme}'", message);
             }
+        }
+
+        public static void RuntimeError(LoxRuntimeException ex)
+        {
+            Console.Error.WriteLine($"{ex.Message}\n[{ex.Token.Line}]");
+            _hadRuntimeError = true;
         }
 
         private static void Report(int line, string where, string message)
