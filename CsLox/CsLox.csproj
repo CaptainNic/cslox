@@ -6,11 +6,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="CodeGen.tt">
+    <None Update="AstNode.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>CodeGen.cs</LastGenOutput>
+      <LastGenOutput>AstNode.cs</LastGenOutput>
+    </None>
+    <None Update="Tests\blockTest.lox">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Tests\printTest.lox">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Tests\varRedefinitionTest.lox">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Tests\varTest.lox">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -20,10 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="CodeGen.cs">
+    <Compile Update="AstNode.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>CodeGen.tt</DependentUpon>
+      <DependentUpon>AstNode.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 

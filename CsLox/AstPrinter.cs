@@ -10,12 +10,27 @@ namespace CsLox
             return node.Accept(this);
         }
 
+        public string VisitBlockStmt(BlockStmt stmt)
+        {
+            throw new NotImplementedException();
+        }
+
         public string VisitExpressionStmt(ExpressionStmt stmt)
         {
             throw new NotImplementedException();
         }
 
         public string VisitPrintStmt(PrintStmt stmt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitVarDeclStmt(VarDeclStmt stmt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitAssignExpr(AssignExpr expr)
         {
             throw new NotImplementedException();
         }
@@ -38,6 +53,11 @@ namespace CsLox
         public string VisitUnaryExpr(UnaryExpr expr)
         {
             return Parenthesize(expr.Oper.Lexeme, expr.Right);
+        }
+
+        public string VisitVarExpr(VarExpr expr)
+        {
+            throw new NotImplementedException();
         }
 
         private string Parenthesize(string name, params AstNode[] exprs)

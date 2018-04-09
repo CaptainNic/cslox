@@ -123,7 +123,7 @@ namespace CsLox
 
         public static void RuntimeError(LoxRuntimeException ex)
         {
-            Console.Error.WriteLine($"{ex.Message}\n[{ex.Token.Line}]");
+            Console.Error.WriteLine($"[Line {ex.Token.Line}] {ex.Message}");
             _hadRuntimeError = true;
         }
 

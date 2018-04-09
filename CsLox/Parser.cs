@@ -30,7 +30,7 @@ namespace CsLox
             {
                 while (!IsAtEnd())
                 {
-                    statements.Add(Statement());
+                    statements.Add(Declaration());
                 }
                 return statements;
             }
@@ -40,24 +40,56 @@ namespace CsLox
             }
         }
 
+        // Declaration -> VarDeclaration | Statement
+        private AstNode Declaration()
+        {
+            try
+            {
+                if (Match(TokenType.VAR))
+                {
+                    return VarDeclaration();
+                }
+
+                return Statement();
+            }
+            catch (ParseException)
+            {
+                Synchronize();
+                return null;
+            }
+        }
+
+        // Statement -> ExpressionStatement | PrintStatement | Block
         private AstNode Statement()
         {
             if (Match(TokenType.PRINT))
             {
                 return PrintStatement();
             }
+            if (Match(TokenType.LEFT_BRACE))
+            {
+                return new BlockStmt(Block());
+            }
 
             return ExpressionStatement();
         }
 
-        private AstNode PrintStatement()
+        // Block -> "{" Declaration* "}"
+        private List<AstNode> Block()
         {
-            AstNode value = Expression();
-            Consume(TokenType.SEMICOLON, "Expect ';' after value.");
+            var statements = new List<AstNode>();
+            
+            while (!Check(TokenType.RIGHT_BRACE) && !IsAtEnd())
+            {
+                statements.Add(Declaration());
+            }
 
-            return new PrintStmt(value);
+            Consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+
+            return statements;
         }
 
+        // ExpressionStatement -> Expression ";"
         private AstNode ExpressionStatement()
         {
             AstNode expr = Expression();
@@ -66,10 +98,57 @@ namespace CsLox
             return new ExpressionStmt(expr);
         }
 
+        // PrintStatement -> "print" Expression ";"
+        private AstNode PrintStatement()
+        {
+            AstNode value = Expression();
+            Consume(TokenType.SEMICOLON, "Expect ';' after value.");
+
+            return new PrintStmt(value);
+        }
+
+        // VarDeclaration -> "var" IDENTIFIER ( "=" Expression )? ";"
+        private AstNode VarDeclaration()
+        {
+            Token name = Consume(TokenType.IDENTIFIER, "Expect variable name.");
+            AstNode initializer = null;
+            if (Match(TokenType.EQUAL))
+            {
+                initializer = Expression();
+            }
+
+            Consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+
+            return new VarDeclStmt(name, initializer);
+        }
+
         // Expression -> Equality
         private AstNode Expression()
         {
-            return Equality();
+            return Assignment();
+        }
+
+        // Assignment -> IDENTIFIER "=" Assignment
+        //             | Equality
+        private AstNode Assignment()
+        {
+            AstNode expr = Equality();
+
+            if (Match(TokenType.EQUAL))
+            {
+                Token equals = Previous();
+                AstNode value = Assignment();
+
+                if (expr is VarExpr)
+                {
+                    Token name = (expr as VarExpr).Name;
+                    return new AssignExpr(name, value);
+                }
+
+                throw Error(equals, "Invalid assignment target.");
+            }
+
+            return expr;
         }
 
         // Equality -> Comparison ( ( != | == ) Comparison )*
@@ -149,6 +228,7 @@ namespace CsLox
         // Primary -> NUMBER | STRING
         //          | "false" | "true" | "nil"
         //          | "(" Expression ")"
+        //          | IDENTIFIER
         private AstNode Primary()
         {
             if (Match(TokenType.NUMBER, TokenType.STRING))
@@ -166,6 +246,10 @@ namespace CsLox
             if (Match(TokenType.NIL))
             {
                 return new LiteralExpr(null);
+            }
+            if (Match(TokenType.IDENTIFIER))
+            {
+                return new VarExpr(Previous());
             }
             if (Match(TokenType.LEFT_PAREN))
             {

@@ -1,8 +1,11 @@
-﻿ExpressionStmt : AstNode Expression
+﻿BlockStmt      : List<AstNode> Statements
+ExpressionStmt : AstNode Expression
 PrintStmt      : AstNode Expression
+VarDeclStmt    : Token Name, AstNode Initializer
 
+AssignExpr     : Token Name, AstNode Value
 BinaryExpr     : AstNode Left, Token Oper, AstNode Right
 GroupingExpr   : AstNode Expression
 LiteralExpr    : object Value
 UnaryExpr      : Token Oper, AstNode Right
-
+VarExpr        : Token Name

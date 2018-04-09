@@ -22,6 +22,8 @@ namespace CsLox
 
     public class Interpreter : AstNode.IVisitor<object>
     {
+        private Scope _scope = new Scope();
+
         public Interpreter()
         {
         }
@@ -46,9 +48,34 @@ namespace CsLox
             stmt.Accept(this);
         }
 
+        private void ExecuteBlock(List<AstNode> statements, Scope scope)
+        {
+            // Temporarily store the current scope for restoration
+            // after the block is finished executing.
+            Scope parentScope = _scope;
+            try
+            {
+                _scope = scope;
+                foreach (var stmt in statements)
+                {
+                    Execute(stmt);
+                }
+            }
+            finally
+            {
+                _scope = parentScope;
+            }
+        }
+
         private object Evaluate(AstNode expr)
         {
             return expr.Accept(this);
+        }
+
+        public object VisitBlockStmt(BlockStmt stmt)
+        {
+            ExecuteBlock(stmt.Statements, new Scope(_scope));
+            return null;
         }
 
         public object VisitExpressionStmt(ExpressionStmt stmt)
@@ -59,8 +86,29 @@ namespace CsLox
 
         public object VisitPrintStmt(PrintStmt stmt)
         {
-            Console.WriteLine(Evaluate(stmt.Expression));
+            object value = Evaluate(stmt.Expression);
+            Console.WriteLine(value == null ? "nil" : value);
             return null;
+        }
+
+        public object VisitVarDeclStmt(VarDeclStmt stmt)
+        {
+            object value = null;
+            if (stmt.Initializer != null)
+            {
+                value = Evaluate(stmt.Initializer);
+            }
+
+            _scope.Define(stmt.Name, value);
+            return null;
+        }
+
+        public object VisitAssignExpr(AssignExpr expr)
+        {
+            object value = Evaluate(expr.Value);
+
+            _scope.Assign(expr.Name, value);
+            return value;
         }
 
         public object VisitBinaryExpr(BinaryExpr expr)
@@ -136,6 +184,11 @@ namespace CsLox
 
             // Should be unreachable.
             throw new LoxRuntimeException(expr.Oper, $"UnaryExpr has unexpected operator: {expr.Oper.Type}.");
+        }
+
+        public object VisitVarExpr(VarExpr expr)
+        {
+            return _scope.Get(expr.Name);
         }
 
         private bool IsTruthy(object obj)
