@@ -1,0 +1,11 @@
+﻿if (nil and 1) {
+	print "you shouldn't see this";
+} else {
+	print "you should see this";
+}
+
+if ("banana" or nil) {
+	print "you should see this";
+} else {
+	print "you shouldn't see this";
+}

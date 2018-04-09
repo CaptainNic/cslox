@@ -84,10 +84,24 @@ namespace CsLox
             return null;
         }
 
+        public object VisitIfStmt(IfStmt stmt)
+        {
+            if (IsTruthy(Evaluate(stmt.Condition)))
+            {
+                Execute(stmt.ThenBranch);
+            }
+            else if (stmt.ElseBranch != null)
+            {
+                Execute(stmt.ElseBranch);
+            }
+
+            return null;
+        }
+
         public object VisitPrintStmt(PrintStmt stmt)
         {
             object value = Evaluate(stmt.Expression);
-            Console.WriteLine(value == null ? "nil" : value);
+            Console.WriteLine(value ?? "nil");
             return null;
         }
 
@@ -167,6 +181,29 @@ namespace CsLox
         public object VisitLiteralExpr(LiteralExpr expr)
         {
             return expr.Value;
+        }
+
+        public object VisitLogicalExpr(LogicalExpr expr)
+        {
+            object left = Evaluate(expr.Left);
+
+            // Short-circuiting logic
+            if (expr.Oper.Type == TokenType.OR)
+            {
+                if (IsTruthy(left))
+                {
+                    return left;
+                }
+            }
+            else
+            {
+                if (!IsTruthy(left))
+                {
+                    return left;
+                }
+            }
+
+            return Evaluate(expr.Right);
         }
 
         public object VisitUnaryExpr(UnaryExpr expr)

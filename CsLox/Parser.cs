@@ -62,6 +62,10 @@ namespace CsLox
         // Statement -> ExpressionStatement | PrintStatement | Block
         private AstNode Statement()
         {
+            if (Match(TokenType.IF))
+            {
+                return IfStatement();
+            }
             if (Match(TokenType.PRINT))
             {
                 return PrintStatement();
@@ -98,6 +102,23 @@ namespace CsLox
             return new ExpressionStmt(expr);
         }
 
+        // IfStatement -> "if" "(" Expression ")" Statement ( "else" Statement )?
+        private AstNode IfStatement()
+        {
+            Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+            AstNode condition = Expression();
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
+
+            AstNode thenBranch = Statement();
+            AstNode elseBranch = null;
+            if (Match(TokenType.ELSE))
+            {
+                elseBranch = Statement();
+            }
+
+            return new IfStmt(condition, thenBranch, elseBranch);
+        }
+
         // PrintStatement -> "print" Expression ";"
         private AstNode PrintStatement()
         {
@@ -122,17 +143,17 @@ namespace CsLox
             return new VarDeclStmt(name, initializer);
         }
 
-        // Expression -> Equality
+        // Expression -> Assignment
         private AstNode Expression()
         {
             return Assignment();
         }
 
         // Assignment -> IDENTIFIER "=" Assignment
-        //             | Equality
+        //             | LogicalOr
         private AstNode Assignment()
         {
-            AstNode expr = Equality();
+            AstNode expr = LogicalOr();
 
             if (Match(TokenType.EQUAL))
             {
@@ -146,6 +167,36 @@ namespace CsLox
                 }
 
                 throw Error(equals, "Invalid assignment target.");
+            }
+
+            return expr;
+        }
+
+        // LogicalOr -> LogicalAnd ( "or" LogicalAnd )*
+        private AstNode LogicalOr()
+        {
+            AstNode expr = LogicalAnd();
+
+            while (Match(TokenType.OR))
+            {
+                Token oper = Previous();
+                AstNode right = LogicalAnd();
+                expr = new LogicalExpr(expr, oper, right);
+            }
+
+            return expr;
+        }
+
+        // LogicalAnd -> Equality ( "and" Equality )*
+        private AstNode LogicalAnd()
+        {
+            AstNode expr = Equality();
+
+            while (Match(TokenType.AND))
+            {
+                Token oper = Previous();
+                AstNode right = Equality();
+                expr = new LogicalExpr(expr, oper, right);
             }
 
             return expr;

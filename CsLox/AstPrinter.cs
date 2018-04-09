@@ -20,6 +20,11 @@ namespace CsLox
             throw new NotImplementedException();
         }
 
+        public string VisitIfStmt(IfStmt stmt)
+        {
+            throw new NotImplementedException();
+        }
+
         public string VisitPrintStmt(PrintStmt stmt)
         {
             throw new NotImplementedException();
@@ -48,6 +53,11 @@ namespace CsLox
         public string VisitLiteralExpr(LiteralExpr expr)
         {
             return expr?.Value.ToString() ?? "nil";
+        }
+
+        public string VisitLogicalExpr(LogicalExpr expr)
+        {
+            throw new NotImplementedException();
         }
 
         public string VisitUnaryExpr(UnaryExpr expr)
