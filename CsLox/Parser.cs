@@ -47,6 +47,10 @@ namespace CsLox
         {
             try
             {
+                if (Match(TokenType.FUN))
+                {
+                    return FunctionStatement("function");
+                }
                 if (Match(TokenType.VAR))
                 {
                     return VarDeclaration();
@@ -80,6 +84,10 @@ namespace CsLox
             {
                 return PrintStatement();
             }
+            if (Match(TokenType.RETURN))
+            {
+                return ReturnStatement();
+            }
             if (Match(TokenType.LEFT_BRACE))
             {
                 return new BlockStmt(Block());
@@ -110,6 +118,33 @@ namespace CsLox
             Consume(TokenType.SEMICOLON, "Expect ';' ater expression.");
 
             return new ExpressionStmt(expr);
+        }
+
+        private AstNode FunctionStatement(string kind)
+        {
+            var name = Consume(TokenType.IDENTIFIER, $"Expect {kind} name.");
+            Consume(TokenType.LEFT_PAREN, $"Expect '(' after {kind} name.");
+
+            var parameters = new List<Token>();
+            if (!Check(TokenType.RIGHT_PAREN))
+            {
+                do
+                {
+                    if (parameters.Count >= MAX_ARG_COUNT)
+                    {
+                        Error(Peek(), $"Cannot have more than {MAX_ARG_COUNT} parameters.");
+                    }
+
+                    parameters.Add(Consume(TokenType.IDENTIFIER, "Expect parameter name."));
+                } while (Match(TokenType.COMMA));
+            }
+
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+            Consume(TokenType.LEFT_BRACE, $"Expect '{{' before {kind} body.");
+            var body = Block();
+
+            return new FunctionStmt(name, parameters, body);
         }
 
         // ForStatement -> "for" "(" ( varDecl | ExpressionStmt | ";" ) Expression? ";" Expression? ";" ")" Statement
@@ -176,6 +211,20 @@ namespace CsLox
             AstNode body = Statement();
 
             return new WhileStmt(condition, body);
+        }
+
+        private AstNode ReturnStatement()
+        {
+            var keyword = Previous();
+            AstNode value = null;
+            if (!Check(TokenType.SEMICOLON))
+            {
+                value = Expression();
+            }
+
+            Consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+
+            return new ReturnStmt(keyword, value);
         }
 
         // PrintStatement -> "print" Expression ";"

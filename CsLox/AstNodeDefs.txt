@@ -1,8 +1,10 @@
 ﻿BlockStmt      : List<AstNode> Statements
 ExpressionStmt : AstNode Expression
+FunctionStmt   : Token Name, List<Token> Parameters, List<AstNode> Body
 IfStmt         : AstNode Condition, AstNode ThenBranch, AstNode ElseBranch
 WhileStmt	   : AstNode Condition, AstNode Body
 PrintStmt      : AstNode Expression
+ReturnStmt     : Token Keyword, AstNode Value
 VarDeclStmt    : Token Name, AstNode Initializer
 
 AssignExpr     : Token Name, AstNode Value

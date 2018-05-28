@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace CsLox
@@ -28,6 +29,21 @@ namespace CsLox
             return Parenthesize("exprStmt", stmt.Expression);
         }
 
+        public string VisitFunctionStmt(FunctionStmt stmt)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"(fundecl {stmt.Name.Lexeme}(");
+            sb.Append(string.Join(",", stmt.Parameters.Select(x => x.Lexeme)));
+            sb.AppendLine(") {");
+            foreach (var node in stmt.Body)
+            {
+                sb.AppendLine($"    {node.Accept(this)}");
+            }
+            sb.AppendLine("}");
+
+            return sb.ToString();
+        }
+
         public string VisitIfStmt(IfStmt stmt)
         {
             if (stmt.ElseBranch != null)
@@ -43,6 +59,11 @@ namespace CsLox
         public string VisitWhileStmt(WhileStmt stmt)
         {
             return Parenthesize("while", stmt.Condition, stmt.Body);
+        }
+
+        public string VisitReturnStmt(ReturnStmt stmt)
+        {
+            return Parenthesize("return", stmt.Value);
         }
 
         public string VisitPrintStmt(PrintStmt stmt)
@@ -100,7 +121,7 @@ namespace CsLox
 
         public string VisitVarExpr(VarExpr expr)
         {
-            return Parenthesize(expr.Name.Lexeme);
+            return expr.Name.Lexeme;
         }
 
         private string Parenthesize(string name, params AstNode[] exprs)

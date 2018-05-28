@@ -31,6 +31,8 @@ namespace CsLox
             DefineBuiltIns();
         }
 
+        public Scope GlobalScope => _global;
+
         public void Interpret(List<AstNode> statements)
         {
             try
@@ -56,7 +58,7 @@ namespace CsLox
             stmt.Accept(this);
         }
 
-        private void ExecuteBlock(List<AstNode> statements, Scope scope)
+        public void ExecuteBlock(List<AstNode> statements, Scope scope)
         {
             // Temporarily store the current scope for restoration
             // after the block is finished executing.
@@ -83,12 +85,22 @@ namespace CsLox
         public object VisitBlockStmt(BlockStmt stmt)
         {
             ExecuteBlock(stmt.Statements, new Scope(_scope));
+
             return null;
         }
 
         public object VisitExpressionStmt(ExpressionStmt stmt)
         {
             Evaluate(stmt.Expression);
+
+            return null;
+        }
+
+        public object VisitFunctionStmt(FunctionStmt stmt)
+        {
+            var func = new LoxFunction(stmt, _scope);
+            _scope.Define(stmt.Name, func);
+
             return null;
         }
 
@@ -116,10 +128,18 @@ namespace CsLox
             return null;
         }
 
+        public object VisitReturnStmt(ReturnStmt stmt)
+        {
+            throw new Return(stmt.Value != null 
+                ? Evaluate(stmt.Value)
+                : null);
+        }
+
         public object VisitPrintStmt(PrintStmt stmt)
         {
             object value = Evaluate(stmt.Expression);
             Console.WriteLine(value ?? "nil");
+
             return null;
         }
 
@@ -132,6 +152,7 @@ namespace CsLox
             }
 
             _scope.Define(stmt.Name, value);
+
             return null;
         }
 
@@ -140,6 +161,7 @@ namespace CsLox
             object value = Evaluate(expr.Value);
 
             _scope.Assign(expr.Name, value);
+
             return value;
         }
 
@@ -306,6 +328,7 @@ namespace CsLox
             {
                 return;
             }
+
             throw new LoxRuntimeException(oper, "Operand must be a number.");
         }
 

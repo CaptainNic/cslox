@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CsLox
 {
-    class Scope
+    public class Scope
     {
         private readonly Scope _parent;
         private readonly Dictionary<string, object> values = new Dictionary<string, object>();
