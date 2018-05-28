@@ -23,6 +23,7 @@ namespace CsLox
     public class Interpreter : AstNode.IVisitor<object>
     {
         private readonly Scope _global = new Scope();
+        private readonly Dictionary<AstNode, int> _locals = new Dictionary<AstNode, int>();
         private Scope _scope;
 
         public Interpreter()
@@ -56,6 +57,21 @@ namespace CsLox
         private void Execute(AstNode stmt)
         {
             stmt.Accept(this);
+        }
+
+        public void Resolve(AstNode expr, int depth)
+        {
+            _locals.Add(expr, depth);
+        }
+
+        private object LookUpVariable(Token name, AstNode expr)
+        {
+            if (!_locals.TryGetValue(expr, out int distance))
+            {
+                return _global.Get(name);
+            }
+
+            return _scope.GetAt(distance, name);
         }
 
         public void ExecuteBlock(List<AstNode> statements, Scope scope)
@@ -160,7 +176,14 @@ namespace CsLox
         {
             object value = Evaluate(expr.Value);
 
-            _scope.Assign(expr.Name, value);
+            if (_locals.TryGetValue(expr, out int distance))
+            {
+                _scope.AssignAt(distance, expr.Name, value);
+            }
+            else
+            {
+                _global.Assign(expr.Name, value);
+            }
 
             return value;
         }
@@ -289,7 +312,7 @@ namespace CsLox
 
         public object VisitVarExpr(VarExpr expr)
         {
-            return _scope.Get(expr.Name);
+            return LookUpVariable(expr.Name, expr);
         }
 
         private bool IsTruthy(object obj)

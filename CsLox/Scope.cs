@@ -7,7 +7,9 @@ namespace CsLox
     public class Scope
     {
         private readonly Scope _parent;
-        private readonly Dictionary<string, object> values = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _values = new Dictionary<string, object>();
+
+        protected Scope Parent => _parent;
 
         public Scope()
         {
@@ -21,27 +23,27 @@ namespace CsLox
 
         public void Define (Token name, object value)
         {
-            if (values.ContainsKey(name.Lexeme))
+            if (_values.ContainsKey(name.Lexeme))
             {
                 throw new LoxRuntimeException(name, $"Redefinition of '{name.Lexeme}'.");
             }
 
-            values.Add(name.Lexeme, value);
+            _values.Add(name.Lexeme, value);
         }
 
         public void Define (ICallable callable)
         {
-            if (values.ContainsKey(callable.Name))
+            if (_values.ContainsKey(callable.Name))
             {
                 throw new LoxRuntimeException(null, $"Redefinition of '{callable.Name}'.");
             }
 
-            values.Add(callable.Name, callable);
+            _values.Add(callable.Name, callable);
         }
 
         public void Assign(Token name, object value)
         {
-            if (!values.ContainsKey(name.Lexeme))
+            if (!_values.ContainsKey(name.Lexeme))
             {
                 if (_parent == null)
                 {
@@ -50,12 +52,27 @@ namespace CsLox
                 _parent.Assign(name, value);
             }
 
-            values[name.Lexeme] = value;
+            _values[name.Lexeme] = value;
+        }
+
+        public void AssignAt(int distance, Token name, object value)
+        {
+            Ancestor(distance).AssignLocal(name, value);
+        }
+
+        protected void AssignLocal(Token name, object value)
+        {
+            if (!_values.ContainsKey(name.Lexeme))
+            {
+                throw new LoxRuntimeException(name, $"Undefined local variable '{name.Lexeme}'.");
+            }
+
+            _values[name.Lexeme] = value;
         }
 
         public object Get(Token name)
         {
-            if (!values.TryGetValue(name.Lexeme, out object value))
+            if (!_values.TryGetValue(name.Lexeme, out object value))
             {
                 if (_parent == null)
                 {
@@ -66,6 +83,32 @@ namespace CsLox
             }
 
             return value;
+        }
+
+        public object GetAt(int distance, Token name)
+        {
+            return Ancestor(distance).GetLocal(name);
+        }
+
+        private object GetLocal(Token name)
+        {
+            if (!_values.TryGetValue(name.Lexeme, out object value))
+            {
+                throw new LoxRuntimeException(name, $"Undefined local variable '{name.Lexeme}'.");
+            }
+
+            return value;
+        }
+
+        private Scope Ancestor(int distance)
+        {
+            var scope = this;
+            for (var i = 0; i < distance; ++i)
+            {
+                scope = scope.Parent;
+            }
+
+            return scope;
         }
     }
 }
