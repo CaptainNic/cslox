@@ -97,8 +97,10 @@ namespace CsLox
             if (_dbgAst)
             {
                 AstPrinter astPrinter = new AstPrinter();
-                // TODO: Update
-                //Console.WriteLine(astPrinter.Print(expression));
+                foreach (var statement in statements)
+                {
+                    Console.WriteLine(astPrinter.Print(statement));
+                }
             }
 
             _interpreter.Interpret(statements);

@@ -22,10 +22,13 @@ namespace CsLox
 
     public class Interpreter : AstNode.IVisitor<object>
     {
-        private Scope _scope = new Scope();
+        private readonly Scope _global = new Scope();
+        private Scope _scope;
 
         public Interpreter()
         {
+            _scope = _global;
+            DefineBuiltIns();
         }
 
         public void Interpret(List<AstNode> statements)
@@ -41,6 +44,11 @@ namespace CsLox
             {
                 Lox.RuntimeError(ex);
             }
+        }
+
+        private void DefineBuiltIns()
+        {
+            _global.Define(new BuiltIns.Clock());
         }
 
         private void Execute(AstNode stmt)
@@ -93,6 +101,16 @@ namespace CsLox
             else if (stmt.ElseBranch != null)
             {
                 Execute(stmt.ElseBranch);
+            }
+
+            return null;
+        }
+
+        public object VisitWhileStmt(WhileStmt stmt)
+        {
+            while (IsTruthy(Evaluate(stmt.Condition)))
+            {
+                Execute(stmt.Body);
             }
 
             return null;
@@ -171,6 +189,30 @@ namespace CsLox
 
             // Should be unreachable.
             throw new LoxRuntimeException(expr.Oper, $"BinaryExpr has unexpected operator: {expr.Oper.Type}.");
+        }
+
+        public object VisitCallExpr(CallExpr expr)
+        {
+            var callee = Evaluate(expr.Callee);
+
+            var args = new List<object>();
+            foreach (var arg in expr.Arguments)
+            {
+                args.Add(Evaluate(arg));
+            }
+
+            var func = callee as ICallable;
+            if (func == null)
+            {
+                throw new LoxRuntimeException(expr.Paren, "Can only call functions and classes.");
+            }
+
+            if (args.Count != func.Arity)
+            {
+                throw new LoxRuntimeException(expr.Paren, $"Expected {func.Arity} arguments, but got {args.Count}.");
+            }
+
+            return func.Call(this, args);
         }
 
         public object VisitGroupingExpr(GroupingExpr expr)

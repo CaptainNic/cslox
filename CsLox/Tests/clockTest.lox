@@ -1,0 +1,2 @@
+﻿print "clock test";
+print clock();

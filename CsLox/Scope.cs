@@ -29,6 +29,16 @@ namespace CsLox
             values.Add(name.Lexeme, value);
         }
 
+        public void Define (ICallable callable)
+        {
+            if (values.ContainsKey(callable.Name))
+            {
+                throw new LoxRuntimeException(null, $"Redefinition of '{callable.Name}'.");
+            }
+
+            values.Add(callable.Name, callable);
+        }
+
         public void Assign(Token name, object value)
         {
             if (!values.ContainsKey(name.Lexeme))
@@ -40,7 +50,7 @@ namespace CsLox
                 _parent.Assign(name, value);
             }
 
-            values.Add(name.Lexeme, value);
+            values[name.Lexeme] = value;
         }
 
         public object Get(Token name)

@@ -12,37 +12,70 @@ namespace CsLox
 
         public string VisitBlockStmt(BlockStmt stmt)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendLine("(block");
+            foreach (var statement in stmt.Statements)
+            {
+                sb.AppendLine($"    {Parenthesize("", statement)}");
+            }
+            sb.Append(")");
+
+            return sb.ToString();
         }
 
         public string VisitExpressionStmt(ExpressionStmt stmt)
         {
-            throw new NotImplementedException();
+            return Parenthesize("exprStmt", stmt.Expression);
         }
 
         public string VisitIfStmt(IfStmt stmt)
         {
-            throw new NotImplementedException();
+            if (stmt.ElseBranch != null)
+            {
+                return Parenthesize("if", stmt.Condition, stmt.ThenBranch, stmt.ElseBranch);
+            }
+            else
+            {
+                return Parenthesize("if", stmt.Condition, stmt.ThenBranch);
+            }
+        }
+
+        public string VisitWhileStmt(WhileStmt stmt)
+        {
+            return Parenthesize("while", stmt.Condition, stmt.Body);
         }
 
         public string VisitPrintStmt(PrintStmt stmt)
         {
-            throw new NotImplementedException();
+            return Parenthesize("print", stmt.Expression);
         }
 
         public string VisitVarDeclStmt(VarDeclStmt stmt)
         {
-            throw new NotImplementedException();
+            return Parenthesize($"declvar {stmt.Name.Lexeme}", stmt.Initializer);
         }
 
         public string VisitAssignExpr(AssignExpr expr)
         {
-            throw new NotImplementedException();
+            return Parenthesize($"{expr.Name.Lexeme} = ", expr.Value);
         }
 
         public string VisitBinaryExpr(BinaryExpr expr)
         {
             return Parenthesize(expr.Oper.Lexeme, expr.Left, expr.Right);
+        }
+
+        public string VisitCallExpr(CallExpr expr)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"(call {expr.Callee.Accept(this)}(");
+            foreach (var arg in expr.Arguments)
+            {
+                sb.Append($"{arg.Accept(this)}, ");
+            }
+            sb.Append(")");
+
+            return sb.ToString();
         }
 
         public string VisitGroupingExpr(GroupingExpr expr)
@@ -57,7 +90,7 @@ namespace CsLox
 
         public string VisitLogicalExpr(LogicalExpr expr)
         {
-            throw new NotImplementedException();
+            return Parenthesize(expr.Oper.Lexeme, expr.Left, expr.Right);
         }
 
         public string VisitUnaryExpr(UnaryExpr expr)
@@ -67,7 +100,7 @@ namespace CsLox
 
         public string VisitVarExpr(VarExpr expr)
         {
-            throw new NotImplementedException();
+            return Parenthesize(expr.Name.Lexeme);
         }
 
         private string Parenthesize(string name, params AstNode[] exprs)

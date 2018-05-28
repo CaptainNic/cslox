@@ -9,6 +9,8 @@ namespace CsLox
 
     public class Parser
     {
+        private static int MAX_ARG_COUNT = 8;
+
         private readonly List<Token> _tokens;
         private int _current = 0;
 
@@ -62,9 +64,17 @@ namespace CsLox
         // Statement -> ExpressionStatement | PrintStatement | Block
         private AstNode Statement()
         {
+            if (Match(TokenType.FOR))
+            {
+                return ForStatement();
+            }
             if (Match(TokenType.IF))
             {
                 return IfStatement();
+            }
+            if (Match(TokenType.WHILE))
+            {
+                return WhileStatement();
             }
             if (Match(TokenType.PRINT))
             {
@@ -102,6 +112,44 @@ namespace CsLox
             return new ExpressionStmt(expr);
         }
 
+        // ForStatement -> "for" "(" ( varDecl | ExpressionStmt | ";" ) Expression? ";" Expression? ";" ")" Statement
+        private AstNode ForStatement()
+        {
+            Consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+            AstNode initializer = default(AstNode);
+            if (!Match(TokenType.SEMICOLON))
+            {
+                initializer = Match(TokenType.VAR)
+                    ? VarDeclaration()
+                    : ExpressionStatement();
+            }
+
+            AstNode condition = Check(TokenType.SEMICOLON) ? new LiteralExpr(true) : Expression();
+            Consume(TokenType.SEMICOLON, "Expect ';' after 'for' loop condition.");
+
+            AstNode increment = Check(TokenType.RIGHT_PAREN) ? null : Expression();
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+            AstNode body = Statement();
+
+            // Desugarize for loop
+            // From: for (var i = 0; i < 10; ++i) doStuff();
+            // To: var i = 0; while (i < 10) { doStuff(); i = i+1; }
+            if (increment != null)
+            {
+                body = new BlockStmt(new List<AstNode> { body, new ExpressionStmt(increment) });
+            }
+
+            body = new WhileStmt(condition, body);
+
+            if (initializer != null)
+            {
+                body = new BlockStmt(new List<AstNode> { initializer, body });
+            }
+
+            return body;
+        }
+
         // IfStatement -> "if" "(" Expression ")" Statement ( "else" Statement )?
         private AstNode IfStatement()
         {
@@ -117,6 +165,17 @@ namespace CsLox
             }
 
             return new IfStmt(condition, thenBranch, elseBranch);
+        }
+
+        // WhileStatement -> "while" "(" Expression ")" Statement
+        private AstNode WhileStatement()
+        {
+            Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+            AstNode condition = Expression();
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after while condition.");
+            AstNode body = Statement();
+
+            return new WhileStmt(condition, body);
         }
 
         // PrintStatement -> "print" Expression ";"
@@ -263,7 +322,7 @@ namespace CsLox
         }
 
         // Unary -> ( ! | - ) Unary
-        //        | Primary
+        //        | Call
         private AstNode Unary()
         {
             if (Match(TokenType.BANG, TokenType.MINUS))
@@ -273,7 +332,39 @@ namespace CsLox
                 return new UnaryExpr(oper, right);
             }
 
-            return Primary();
+            return Call();
+        }
+
+        // Call -> Primary ( "(" Arguments? ")" )*
+        private AstNode Call()
+        {
+            AstNode expr = Primary();
+            while (Match(TokenType.LEFT_PAREN))
+            {
+                expr = FinishCall(expr);
+            }
+
+            return expr;
+        }
+
+        private AstNode FinishCall(AstNode callee)
+        {
+            var arguments = new List<AstNode>();
+            if (!Check(TokenType.RIGHT_PAREN))
+            {
+                do
+                {
+                    if (arguments.Count >= MAX_ARG_COUNT)
+                    {
+                        Error(Peek(), $"Cannot have more than {MAX_ARG_COUNT} arguments.");
+                    }
+                    arguments.Add(Expression());
+                } while (Match(TokenType.COMMA));
+            }
+
+            Token paren = Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+            return new CallExpr(callee, paren, arguments);
         }
 
         // Primary -> NUMBER | STRING
