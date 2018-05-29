@@ -5,13 +5,13 @@ namespace CsLox
     internal class LoxClass : ICallable
     {
         private readonly string _name;
-        private readonly LoxClass _baseClass;
+        private readonly LoxClass _superClass;
         private readonly Dictionary<string, LoxFunction> _methods;
 
-        public LoxClass(string name, LoxClass baseClass, Dictionary<string, LoxFunction> methods)
+        public LoxClass(string name, LoxClass superClass, Dictionary<string, LoxFunction> methods)
         {
             _name = name;
-            _baseClass = baseClass;
+            _superClass = superClass;
             _methods = methods;
         }
 
@@ -22,7 +22,7 @@ namespace CsLox
                 return method.Bind(instance);
             }
 
-            return null;
+            return _superClass?.FindMethod(instance, name);
         }
 
         public int Arity

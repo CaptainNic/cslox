@@ -1,5 +1,5 @@
 ﻿BlockStmt      : List<AstNode> Statements
-ClassStmt	   : Token Name, VarExpr BaseClass, List<FunctionStmt> Methods
+ClassStmt	   : Token Name, VarExpr SuperClass, List<FunctionStmt> Methods
 ExpressionStmt : AstNode Expression
 FunctionStmt   : Token Name, List<Token> Parameters, List<AstNode> Body
 IfStmt         : AstNode Condition, AstNode ThenBranch, AstNode ElseBranch
@@ -16,6 +16,7 @@ GroupingExpr   : AstNode Expression
 LiteralExpr    : object Value
 LogicalExpr    : AstNode Left, Token Oper, AstNode Right
 SetExpr		   : AstNode Object, Token Name, AstNode Value
+SuperExpr	   : Token Keyword, Token Method
 ThisExpr       : Token Keyword
 UnaryExpr      : Token Oper, AstNode Right
 VarExpr        : Token Name

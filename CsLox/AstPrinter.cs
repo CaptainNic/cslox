@@ -157,5 +157,10 @@ namespace CsLox
         {
             return "this";
         }
+
+        public string VisitSuperExpr(SuperExpr expr)
+        {
+            return $"super.{expr.Method.Lexeme}";
+        }
     }
 }

@@ -128,11 +128,11 @@ namespace CsLox
         {
             Token name = Consume(TokenType.IDENTIFIER, "Expect class name.");
 
-            var baseClass = default(VarExpr);
+            var superClass = default(VarExpr);
             if (Match(TokenType.LESS))
             {
                 Consume(TokenType.IDENTIFIER, "Expect base class name.");
-                baseClass = new VarExpr(Previous());
+                superClass = new VarExpr(Previous());
             }
 
             Consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
@@ -145,7 +145,7 @@ namespace CsLox
 
             Consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
 
-            return new ClassStmt(name, baseClass, methods);
+            return new ClassStmt(name, superClass, methods);
         }
 
         private AstNode FuncDeclaration(string kind)
@@ -469,6 +469,13 @@ namespace CsLox
             if (Match(TokenType.NUMBER, TokenType.STRING))
             {
                 return new LiteralExpr(Previous().Literal);
+            }
+            if (Match(TokenType.SUPER))
+            {
+                var keyword = Previous();
+                Consume(TokenType.DOT, "Expect '.' after 'super'.");
+                var method = Consume(TokenType.IDENTIFIER, "Expect superclass method name.");
+                return new SuperExpr(keyword, method);
             }
             if (Match(TokenType.THIS))
             {

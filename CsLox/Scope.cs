@@ -9,7 +9,7 @@ namespace CsLox
         private readonly Scope _parent;
         private readonly Dictionary<string, object> _values = new Dictionary<string, object>();
 
-        protected Scope Parent => _parent;
+        public Scope Parent => _parent;
 
         public Scope()
         {

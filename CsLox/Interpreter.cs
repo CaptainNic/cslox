@@ -108,14 +108,17 @@ namespace CsLox
         public object VisitClassStmt(ClassStmt stmt)
         {
             _scope.Define(stmt.Name.Lexeme, null);
-            var baseClass = default(LoxClass);
-            if (stmt.BaseClass != null)
+            var superClass = default(LoxClass);
+            if (stmt.SuperClass != null)
             {
-                baseClass = Evaluate(stmt.BaseClass) as LoxClass;
-                if (baseClass == null)
+                superClass = Evaluate(stmt.SuperClass) as LoxClass;
+                if (superClass == null)
                 {
-                    throw new LoxRuntimeException(stmt.BaseClass.Name, "Base class must be a class.");
+                    throw new LoxRuntimeException(stmt.SuperClass.Name, "Base class must be a class.");
                 }
+
+                _scope = new Scope(_scope);
+                _scope.Define("super", superClass);
             }
 
             var methods = new Dictionary<string, LoxFunction>();
@@ -125,7 +128,12 @@ namespace CsLox
                 methods.Add(method.Name.Lexeme, func);
             }
 
-            LoxClass klass = new LoxClass(stmt.Name.Lexeme, baseClass, methods);
+            LoxClass klass = new LoxClass(stmt.Name.Lexeme, superClass, methods);
+            if (superClass != null)
+            {
+                _scope = _scope.Parent;
+            }
+
             _scope.Assign(stmt.Name, klass);
 
             return null;
@@ -342,6 +350,23 @@ namespace CsLox
             obj.Set(expr.Name, value);
 
             return value;
+        }
+
+        public object VisitSuperExpr(SuperExpr expr)
+        {
+            int distance = _locals[expr];
+            var superClass = _scope.GetAt(distance, "super") as LoxClass;
+
+            // "this" is always one level closer than "super"'s scope.
+            var obj = _scope.GetAt(distance - 1, "this") as LoxInstance;
+
+            var method = superClass.FindMethod(obj, expr.Method.Lexeme);
+            if (method == null)
+            {
+                throw new LoxRuntimeException(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.");
+            }
+
+            return method;
         }
 
         public object VisitThisExpr(ThisExpr expr)

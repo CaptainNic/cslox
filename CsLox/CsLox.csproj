@@ -28,6 +28,9 @@
     <None Update="Tests\funTest.lox">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Tests\inheritanceTest.lox">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Tests\printTest.lox">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
