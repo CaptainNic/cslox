@@ -21,14 +21,14 @@ namespace CsLox
             _parent = parent;
         }
 
-        public void Define (Token name, object value)
+        public void Define (string name, object value)
         {
-            if (_values.ContainsKey(name.Lexeme))
+            if (_values.ContainsKey(name))
             {
-                throw new LoxRuntimeException(name, $"Redefinition of '{name.Lexeme}'.");
+                throw new LoxRuntimeException(null, $"Redefinition of '{name}'.");
             }
 
-            _values.Add(name.Lexeme, value);
+            _values.Add(name, value);
         }
 
         public void Define (ICallable callable)
@@ -85,16 +85,16 @@ namespace CsLox
             return value;
         }
 
-        public object GetAt(int distance, Token name)
+        public object GetAt(int distance, string name)
         {
             return Ancestor(distance).GetLocal(name);
         }
 
-        private object GetLocal(Token name)
+        private object GetLocal(string name)
         {
-            if (!_values.TryGetValue(name.Lexeme, out object value))
+            if (!_values.TryGetValue(name, out object value))
             {
-                throw new LoxRuntimeException(name, $"Undefined local variable '{name.Lexeme}'.");
+                throw new LoxRuntimeException(null, $"Undefined local variable '{name}'.");
             }
 
             return value;

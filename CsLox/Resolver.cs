@@ -9,11 +9,20 @@ namespace CsLox
         private readonly Interpreter _interpreter;
         private readonly Stack<Dictionary<string, bool>> _scopes = new Stack<Dictionary<string, bool>>();
         private FunctionType _currentFuncType = FunctionType.NONE;
+        private ClassType _currentClassType = ClassType.NONE;
 
         private enum FunctionType
         {
             NONE,
-            FUNCTION
+            FUNCTION,
+            INITIALIZER,
+            METHOD
+        };
+
+        private enum ClassType
+        {
+            NONE,
+            CLASS
         };
 
         public Resolver(Interpreter interpreter)
@@ -136,6 +145,37 @@ namespace CsLox
             return null;
         }
 
+        public object VisitClassStmt(ClassStmt stmt)
+        {
+            Declare(stmt.Name);
+            Define(stmt.Name);
+
+            var enclosingClassType = _currentClassType;
+            _currentClassType = ClassType.CLASS;
+
+            if (stmt.BaseClass != null)
+            {
+                Resolve(stmt.BaseClass);
+            }
+
+            BeginScope();
+
+            _scopes.Peek().Add("this", true);
+            foreach (var method in stmt.Methods)
+            {
+                var declaration = method.Name.Lexeme.Equals("init")
+                    ? FunctionType.INITIALIZER
+                    : FunctionType.METHOD;
+
+                ResolveFunction(method, declaration);
+            }
+
+            EndScope();
+            _currentClassType = enclosingClassType;
+
+            return null;
+        }
+
         public object VisitExpressionStmt(ExpressionStmt stmt)
         {
             Resolve(stmt.Expression);
@@ -150,6 +190,13 @@ namespace CsLox
             Declare(stmt.Name);
             Define(stmt.Name);
             ResolveFunction(stmt, FunctionType.FUNCTION);
+
+            return null;
+        }
+
+        public object VisitGetExpr(GetExpr expr)
+        {
+            Resolve(expr.Object);
 
             return null;
         }
@@ -202,8 +249,34 @@ namespace CsLox
 
             if (stmt.Value != null)
             {
+                if (_currentFuncType == FunctionType.INITIALIZER)
+                {
+                    Lox.Error(stmt.Keyword, "Cannot return a value from an initializer.");
+                }
+
                 Resolve(stmt.Value);
             }
+
+            return null;
+        }
+
+        public object VisitSetExpr(SetExpr expr)
+        {
+            Resolve(expr.Value);
+            Resolve(expr.Object);
+
+            return null;
+        }
+
+        public object VisitThisExpr(ThisExpr expr)
+        {
+            if (_currentClassType == ClassType.NONE)
+            {
+                Lox.Error(expr.Keyword, "Cannot use 'this' outside of a class.");
+                return null;
+            }
+
+            ResolveLocal(expr, expr.Keyword);
 
             return null;
         }

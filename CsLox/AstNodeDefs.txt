@@ -1,4 +1,5 @@
 ﻿BlockStmt      : List<AstNode> Statements
+ClassStmt	   : Token Name, VarExpr BaseClass, List<FunctionStmt> Methods
 ExpressionStmt : AstNode Expression
 FunctionStmt   : Token Name, List<Token> Parameters, List<AstNode> Body
 IfStmt         : AstNode Condition, AstNode ThenBranch, AstNode ElseBranch
@@ -10,8 +11,11 @@ VarDeclStmt    : Token Name, AstNode Initializer
 AssignExpr     : Token Name, AstNode Value
 BinaryExpr     : AstNode Left, Token Oper, AstNode Right
 CallExpr	   : AstNode Callee, Token Paren, List<AstNode> Arguments
+GetExpr		   : AstNode Object, Token Name
 GroupingExpr   : AstNode Expression
 LiteralExpr    : object Value
 LogicalExpr    : AstNode Left, Token Oper, AstNode Right
+SetExpr		   : AstNode Object, Token Name, AstNode Value
+ThisExpr       : Token Keyword
 UnaryExpr      : Token Oper, AstNode Right
 VarExpr        : Token Name

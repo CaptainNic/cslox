@@ -47,9 +47,13 @@ namespace CsLox
         {
             try
             {
+                if (Match(TokenType.CLASS))
+                {
+                    return ClassDeclaration();
+                }
                 if (Match(TokenType.FUN))
                 {
-                    return FunctionStatement("function");
+                    return FuncDeclaration("function");
                 }
                 if (Match(TokenType.VAR))
                 {
@@ -120,7 +124,31 @@ namespace CsLox
             return new ExpressionStmt(expr);
         }
 
-        private AstNode FunctionStatement(string kind)
+        private AstNode ClassDeclaration()
+        {
+            Token name = Consume(TokenType.IDENTIFIER, "Expect class name.");
+
+            var baseClass = default(VarExpr);
+            if (Match(TokenType.LESS))
+            {
+                Consume(TokenType.IDENTIFIER, "Expect base class name.");
+                baseClass = new VarExpr(Previous());
+            }
+
+            Consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+            var methods = new List<FunctionStmt>();
+            while (!Check(TokenType.RIGHT_BRACE) && !IsAtEnd())
+            {
+                methods.Add(FuncDeclaration("method") as FunctionStmt);
+            }
+
+            Consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+            return new ClassStmt(name, baseClass, methods);
+        }
+
+        private AstNode FuncDeclaration(string kind)
         {
             var name = Consume(TokenType.IDENTIFIER, $"Expect {kind} name.");
             Consume(TokenType.LEFT_PAREN, $"Expect '(' after {kind} name.");
@@ -273,6 +301,11 @@ namespace CsLox
                     Token name = (expr as VarExpr).Name;
                     return new AssignExpr(name, value);
                 }
+                else if (expr is GetExpr)
+                {
+                    var get = expr as GetExpr;
+                    return new SetExpr(get.Object, get.Name, value);
+                }
 
                 throw Error(equals, "Invalid assignment target.");
             }
@@ -388,11 +421,22 @@ namespace CsLox
         private AstNode Call()
         {
             AstNode expr = Primary();
-            while (Match(TokenType.LEFT_PAREN))
+            while (true)
             {
-                expr = FinishCall(expr);
+                if (Match(TokenType.LEFT_PAREN))
+                {
+                    expr = FinishCall(expr);
+                }
+                else if (Match(TokenType.DOT))
+                {
+                    var name = Consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                    expr = new GetExpr(expr, name);
+                }
+                else
+                {
+                    break;
+                }
             }
-
             return expr;
         }
 
@@ -425,6 +469,10 @@ namespace CsLox
             if (Match(TokenType.NUMBER, TokenType.STRING))
             {
                 return new LiteralExpr(Previous().Literal);
+            }
+            if (Match(TokenType.THIS))
+            {
+                return new ThisExpr(Previous());
             }
             if (Match(TokenType.FALSE))
             {

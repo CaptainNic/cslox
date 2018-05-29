@@ -8,23 +8,33 @@ namespace CsLox
     {
         private readonly FunctionStmt _declaration;
         private readonly Scope _closure;
+        private readonly Boolean _isInitializer;
 
-        public LoxFunction(FunctionStmt declaration, Scope closure)
+        public LoxFunction(FunctionStmt declaration, Scope closure, bool isInitializer)
         {
             _declaration = declaration;
             _closure = closure;
+            _isInitializer = isInitializer;
         }
 
-        string ICallable.Name => $"<fn {_declaration.Name.Lexeme}>";
+        public LoxFunction Bind(LoxInstance instance)
+        {
+            var scope = new Scope(_closure);
+            scope.Define("this", instance);
 
-        int ICallable.Arity => _declaration.Parameters.Count;
+            return new LoxFunction(_declaration, scope, _isInitializer);
+        }
 
-        object ICallable.Call(Interpreter interpreter, List<object> args)
+        public string Name => $"<fn {_declaration.Name.Lexeme}>";
+
+        public int Arity => _declaration.Parameters.Count;
+
+        public object Call(Interpreter interpreter, List<object> args)
         {
             var scope = new Scope(_closure);
             for (var i = 0; i < args.Count; ++i)
             {
-                scope.Define(_declaration.Parameters[i], args[i]);
+                scope.Define(_declaration.Parameters[i].Lexeme, args[i]);
             }
 
             // Return is handled as an exception to take advantage of
@@ -35,10 +45,14 @@ namespace CsLox
             }
             catch (Return ret)
             {
-                return ret.Value;
+                return (_isInitializer)
+                    ? _closure.GetAt(0, "this")
+                    : ret.Value;
             }
 
-            return null;
+            return (_isInitializer)
+                ? _closure.GetAt(0, "this")
+                : null;
         }
     }
 }

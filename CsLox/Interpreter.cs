@@ -71,7 +71,7 @@ namespace CsLox
                 return _global.Get(name);
             }
 
-            return _scope.GetAt(distance, name);
+            return _scope.GetAt(distance, name.Lexeme);
         }
 
         public void ExecuteBlock(List<AstNode> statements, Scope scope)
@@ -105,6 +105,32 @@ namespace CsLox
             return null;
         }
 
+        public object VisitClassStmt(ClassStmt stmt)
+        {
+            _scope.Define(stmt.Name.Lexeme, null);
+            var baseClass = default(LoxClass);
+            if (stmt.BaseClass != null)
+            {
+                baseClass = Evaluate(stmt.BaseClass) as LoxClass;
+                if (baseClass == null)
+                {
+                    throw new LoxRuntimeException(stmt.BaseClass.Name, "Base class must be a class.");
+                }
+            }
+
+            var methods = new Dictionary<string, LoxFunction>();
+            foreach (var method in stmt.Methods)
+            {
+                var func = new LoxFunction(method, _scope, method.Name.Lexeme.Equals("init"));
+                methods.Add(method.Name.Lexeme, func);
+            }
+
+            LoxClass klass = new LoxClass(stmt.Name.Lexeme, baseClass, methods);
+            _scope.Assign(stmt.Name, klass);
+
+            return null;
+        }
+
         public object VisitExpressionStmt(ExpressionStmt stmt)
         {
             Evaluate(stmt.Expression);
@@ -114,8 +140,8 @@ namespace CsLox
 
         public object VisitFunctionStmt(FunctionStmt stmt)
         {
-            var func = new LoxFunction(stmt, _scope);
-            _scope.Define(stmt.Name, func);
+            var func = new LoxFunction(stmt, _scope, false);
+            _scope.Define(stmt.Name.Lexeme, func);
 
             return null;
         }
@@ -167,7 +193,7 @@ namespace CsLox
                 value = Evaluate(stmt.Initializer);
             }
 
-            _scope.Define(stmt.Name, value);
+            _scope.Define(stmt.Name.Lexeme, value);
 
             return null;
         }
@@ -260,6 +286,17 @@ namespace CsLox
             return func.Call(this, args);
         }
 
+        public object VisitGetExpr(GetExpr expr)
+        {
+            var obj = Evaluate(expr.Object) as LoxInstance;
+            if (obj == null)
+            {
+                throw new LoxRuntimeException(expr.Name, "Only instances have properties.");
+            }
+
+            return obj.Get(expr.Name);
+        }
+
         public object VisitGroupingExpr(GroupingExpr expr)
         {
             return Evaluate(expr.Expression);
@@ -291,6 +328,25 @@ namespace CsLox
             }
 
             return Evaluate(expr.Right);
+        }
+
+        public object VisitSetExpr(SetExpr expr)
+        {
+            var obj = Evaluate(expr.Object) as LoxInstance;
+            if (obj == null)
+            {
+                throw new LoxRuntimeException(expr.Name, "Only instances have fields.");
+            }
+
+            var value = Evaluate(expr.Value);
+            obj.Set(expr.Name, value);
+
+            return value;
+        }
+
+        public object VisitThisExpr(ThisExpr expr)
+        {
+            return LookUpVariable(expr.Keyword, expr);
         }
 
         public object VisitUnaryExpr(UnaryExpr expr)

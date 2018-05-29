@@ -137,5 +137,25 @@ namespace CsLox
 
             return sb.ToString();
         }
+
+        public string VisitClassStmt(ClassStmt astNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitGetExpr(GetExpr astNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitSetExpr(SetExpr astNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitThisExpr(ThisExpr expr)
+        {
+            return "this";
+        }
     }
 }
